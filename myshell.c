@@ -22,7 +22,7 @@ int set_signal_handling(sig_t new_SIG) {
 int is_piping(int count, char **arglist) {
     int index = -1;
     for (int i = 0; i < count; i++) {
-        if (*arglist[i] == PIPEPROCESS) { //TODO: change the comparison
+        if (*arglist[i] == PIPEPROCESS) {
             index = i;
             break;
         }
@@ -89,8 +89,9 @@ void pipe_running(int count, char **arglist, int index) {
             exit_with_err("failed duplicating the writer process");
         }
         set_signal_handling(SIG_DFL);
-        execute(arglist[0], arglist);
         close(writerfd);
+        execute(arglist[0], arglist);
+        //waitpid(pid_writer, NULL, 0);
     }
     //parent process, creating another child and using it as a reader
     int pid_reader = fork();
@@ -104,15 +105,17 @@ void pipe_running(int count, char **arglist, int index) {
             exit_with_err("failed duplicating the reader process");
         }
         set_signal_handling(SIG_DFL);
+        close(readerfd);
         execute(arglist[index + 1], arglist + index + 1);
-
+        //waitpid(readerfd, NULL, 0);
     }
 
 
-    close(readerfd);
-    waitpid(pid_reader, NULL, 0);
     close(writerfd);
     waitpid(pid_writer, NULL, 0);
+    close(readerfd);
+    waitpid(pid_reader, NULL, 0);
+    exit(EXIT_SUCCESS);
 }
 
 
@@ -125,8 +128,8 @@ int prepare(void) {
 
 
 int process_arglist(int count, char **arglist) {
-    if (*arglist[count] == BGPROCESS) { //TODO: change the comparison
-        arglist[count] = NULL;
+    if (*arglist[count-1] == BGPROCESS) {
+        arglist[count-1] = NULL;
         run_in_background(count - 1, arglist);
     } else if ((is_piping(count, arglist)) != -1) {
         int index = is_piping(count, arglist);
