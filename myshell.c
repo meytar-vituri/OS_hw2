@@ -64,7 +64,7 @@ void simple_run(int count, char **arglist) {
         int status;
         int pid = wait(&status);
         if (errno != 0 && errno != ECHILD && errno != EINTR) {
-            printf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid);
+            fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid);
             exit(EXIT_FAILURE);
         }
         exit(EXIT_SUCCESS);
