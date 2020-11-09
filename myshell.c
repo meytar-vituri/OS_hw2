@@ -112,12 +112,12 @@ void pipe_running(int count, char **arglist, int index) {
 
     int status;
     close(writerfd);
-    waitpid(pid_writer, NULL, 0);
+    waitpid(pid_writer, status, WUNTRACED);
     if (errno != 0 && errno != ECHILD && errno != EINTR){
         fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_writer);
     }
     close(readerfd);
-    waitpid(pid_reader, NULL, 0);
+    waitpid(pid_reader, status, WUNTRACED);
     if (errno != 0 && errno != ECHILD && errno != EINTR){
         fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_reader);
     }
