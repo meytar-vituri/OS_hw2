@@ -19,4 +19,6 @@ signal.h
 -
 sys/wait.h
 -
+errno.h
+-
 

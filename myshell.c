@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 #define BGPROCESS '&'
 #define PIPEPROCESS '|'
@@ -62,8 +63,9 @@ void simple_run(int count, char **arglist) {
     } else {
         int status;
         int pid = wait(&status);
-        if (WIFEXITED(status)) {
-            printf("Child: %d, Exit code: %d \n", pid, WEXITSTATUS(status));
+        if (errno != 0 && errno != ECHILD && errno != EINTR) {
+            printf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid);
+            exit(EXIT_FAILURE);
         }
         exit(EXIT_SUCCESS);
     }
@@ -91,7 +93,6 @@ void pipe_running(int count, char **arglist, int index) {
         set_signal_handling(SIG_DFL);
         close(writerfd);
         execute(arglist[0], arglist);
-        //waitpid(pid_writer, NULL, 0);
     }
     //parent process, creating another child and using it as a reader
     int pid_reader = fork();
@@ -107,14 +108,19 @@ void pipe_running(int count, char **arglist, int index) {
         set_signal_handling(SIG_DFL);
         close(readerfd);
         execute(arglist[index + 1], arglist + index + 1);
-        //waitpid(readerfd, NULL, 0);
     }
 
-
+    int status;
     close(writerfd);
     waitpid(pid_writer, NULL, 0);
+    if (errno != 0 && errno != ECHILD && errno != EINTR){
+        fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_writer);
+    }
     close(readerfd);
     waitpid(pid_reader, NULL, 0);
+    if (errno != 0 && errno != ECHILD && errno != EINTR){
+        fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_reader);
+    }
     exit(EXIT_SUCCESS);
 }
 
@@ -137,7 +143,6 @@ int process_arglist(int count, char **arglist) {
     } else{
         simple_run(count, arglist);
     }
-    //TODO: wait for all processes to complete
     return 1;
 }
 
