@@ -110,14 +110,14 @@ void pipe_running(int count, char **arglist, int index) {
         execute(arglist[index + 1], arglist + index + 1);
     }
 
-    int status;
+    int status = 0;
     close(writerfd);
-    waitpid(pid_writer, status, WUNTRACED);
+    waitpid(pid_writer, &status, WUNTRACED);
     if (errno != 0 && errno != ECHILD && errno != EINTR){
         fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_writer);
     }
     close(readerfd);
-    waitpid(pid_reader, status, WUNTRACED);
+    waitpid(pid_reader, &status, WUNTRACED);
     if (errno != 0 && errno != ECHILD && errno != EINTR){
         fprintf(stderr, "exited with exit code %d in child process no %d \n", WEXITSTATUS(status), pid_reader);
     }
